@@ -3,62 +3,64 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Booking extends CI_Controller {
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
+        // Load the model
         $this->load->model('Booking_model');
-        $this->load->helper('url');
-        $this->load->library('form_validation');
     }
 
-    public function index() {
-        $data['page_title'] = 'Online Booking';
-        $this->load->view('booking_form', $data);
+    // Displays the booking form
+    public function index()
+    {
+        $this->load->view('booking_form');
     }
 
-    public function submit() {
-        // Set validation rules
-        $this->form_validation->set_rules('full_name', 'Full Name', 'required|trim');
+    // Handles form submission and validation
+    public function submit()
+    {
+        // 1. Set Validation Rules
+        $this->form_validation->set_rules('name', 'Name', 'required|trim');
         $this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim');
-        $this->form_validation->set_rules('phone', 'Phone', 'required|trim');
-        $this->form_validation->set_rules('service_type', 'Service Type', 'required');
-        $this->form_validation->set_rules('preferred_date', 'Preferred Date', 'required');
-        $this->form_validation->set_rules('preferred_time', 'Preferred Time', 'required');
+        $this->form_validation->set_rules('phone', 'Phone', 'required|trim|numeric');
+        $this->form_validation->set_rules('date', 'Date', 'required|trim');
+        $this->form_validation->set_rules('time', 'Time', 'required|trim');
 
-        if ($this->form_validation->run() == FALSE) {
-            // Validation failed
-            $response = array(
-                'success' => false,
-                'message' => validation_errors()
-            );
-        } else {
-            // Prepare data
-            $booking_data = array(
-                'full_name' => $this->input->post('full_name'),
-                'email' => $this->input->post('email'),
-                'phone' => $this->input->post('phone'),
-                'service_type' => $this->input->post('service_type'),
-                'preferred_date' => $this->input->post('preferred_date'),
-                'preferred_time' => $this->input->post('preferred_time'),
-                'message' => $this->input->post('message'),
-                'status' => 'pending'
+        if ($this->form_validation->run() == FALSE)
+        {
+            // 2. Validation failed, show form again with errors
+            $this->load->view('booking_form');
+        }
+        else
+        {
+            // 3. Validation passed, process data
+            $data = array(
+                'name'         => $this->input->post('name'),
+                'email'        => $this->input->post('email'),
+                'phone'        => $this->input->post('phone'),
+                'booking_date' => $this->input->post('date'),
+                'booking_time' => $this->input->post('time')
             );
 
-            // Insert into database
-            $insert_id = $this->Booking_model->create_booking($booking_data);
-
-            if ($insert_id) {
-                $response = array(
-                    'success' => true,
-                    'message' => 'Booking submitted successfully! We will contact you soon.'
-                );
-            } else {
-                $response = array(
-                    'success' => false,
-                    'message' => 'Failed to submit booking. Please try again.'
-                );
+            // 4. Call the Model to save the data
+            if ($this->Booking_model->insert_booking($data))
+            {
+                // Success: Redirect to a thank you page
+                $this->session->set_flashdata('success', 'Your consultation has been booked successfully!');
+                redirect('booking/success');
+            }
+            else
+            {
+                // Failure
+                $this->session->set_flashdata('error', 'There was an issue processing your booking. Please try again.');
+                redirect('booking'); // Redirect back to form
             }
         }
-
-        echo json_encode($response);
+    }
+    
+    // Success page (for redirection after successful booking)
+    public function success()
+    {
+        $this->load->view('booking_success');
     }
 }
