@@ -76,11 +76,11 @@ $query_builder = TRUE;
 $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => 'localhost',
+	'port'     => '3307',
 	'username' => 'root',
 	'password' => '',
 	'database' => 'lordhair_db',
 	'dbdriver' => 'mysqli',  
-	'port'     => '3307',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
 	'db_debug' => (ENVIRONMENT !== 'production'),
